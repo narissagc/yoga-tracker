@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yoga">
+<title>Yoga Tracker</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: #212e53;
+    color: #ebaca2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+    padding-top: calc(env(safe-area-inset-top, 20px) + 28px);
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #bed3c3;
+    margin-bottom: 28px;
+  }
+
+  .today-button {
+    width: 100%;
+    max-width: 340px;
+    padding: 16px;
+    border-radius: 50px;
+    border: none;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-bottom: 22px;
+    letter-spacing: 0.5px;
+  }
+
+  .today-button:active {
+    transform: scale(0.97);
+  }
+
+  .today-button.mark {
+    background: #ce6a6b;
+    color: #fff;
+  }
+
+  .today-button.unmark {
+    background: #2d3a5c;
+    color: #7a8aab;
+  }
+
+  .stats {
+    display: flex;
+    gap: 36px;
+    margin-bottom: 28px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ebaca2;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #4a919e;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .divider {
+    width: 100%;
+    max-width: 340px;
+    height: 1px;
+    background: #2d3a5c;
+    margin-bottom: 24px;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 340px;
+    margin-bottom: 16px;
+  }
+
+  .month-nav button {
+    background: none;
+    border: none;
+    color: #4a919e;
+    font-size: 22px;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
+  .month-nav button:active {
+    background: rgba(74, 145, 158, 0.15);
+  }
+
+  .month-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #bed3c3;
+    letter-spacing: 0.5px;
+  }
+
+  .weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%;
+    max-width: 340px;
+    margin-bottom: 6px;
+  }
+
+  .weekday-header span {
+    text-align: center;
+    font-size: 11px;
+    color: #4a6a8a;
+    font-weight: 500;
+    padding: 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    color: #8a9dbd;
+  }
+
+  .day:active {
+    transform: scale(0.88);
+  }
+
+  .day.empty {
+    cursor: default;
+  }
+
+  .day.completed {
+    background: #ce6a6b;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .day.today {
+    border: 2px solid #4a919e;
+  }
+
+  .day.today.completed {
+    border: 2px solid #ebaca2;
+  }
+
+  .day.future {
+    color: #2d3a5c;
+    cursor: default;
+  }
+
+  .day:not(.empty):not(.future):not(.completed):hover {
+    background: rgba(74, 145, 158, 0.12);
+  }
+
+  .backup-section {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .backup-btn {
+    background: none;
+    border: 1px solid #2d3a5c;
+    color: #4a919e;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+
+  .backup-btn:active {
+    background: rgba(74, 145, 158, 0.15);
+  }
+
+  .backup-msg {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #4a919e;
+    text-align: center;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Yoga</h1>
+
+<button class="today-button" id="todayBtn"></button>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-value" id="currentStreak">0</div>
+    <div class="stat-label">Streak</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="longestStreak">0</div>
+    <div class="stat-label">Best</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="totalDays">0</div>
+    <div class="stat-label">Total</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="month-nav">
+  <button id="prevMonth">&lsaquo;</button>
+  <span class="month-label" id="monthLabel"></span>
+  <button id="nextMonth">&rsaquo;</button>
+</div>
+
+<div class="weekday-header">
+  <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+</div>
+
+<div class="calendar" id="calendar"></div>
+
+<div class="backup-section">
+  <button class="backup-btn" id="exportBtn">Export</button>
+  <button class="backup-btn" id="importBtn">Import</button>
+  <input type="file" id="importFile" accept=".json" style="display:none">
+</div>
+<div class="backup-msg" id="backupMsg"></div>
+
+<script>
+  const STORAGE_KEY = 'yoga_days';
+
+  let viewYear, viewMonth;
+
+  function today() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function dateStr(y, m, d) {
+    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  function load() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch { return new Set(); }
+  }
+
+  function save(days) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...days]));
+  }
+
+  function toggle(date) {
+    const days = load();
+    if (days.has(date)) days.delete(date);
+    else days.add(date);
+    save(days);
+    render();
+  }
+
+  function calcStreaks() {
+    const days = load();
+    const sorted = [...days].sort();
+    const total = sorted.length;
+
+    if (total === 0) return { current: 0, longest: 0, total: 0 };
+
+    let current = 0;
+    const t = new Date();
+    const d = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+
+    const todayKey = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
+    if (!days.has(todayKey)) {
+      d.setDate(d.getDate() - 1);
+    }
+
+    while (true) {
+      const key = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
+      if (days.has(key)) {
+        current++;
+        d.setDate(d.getDate() - 1);
+      } else break;
+    }
+
+    let longest = 1, run = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i-1] + 'T00:00:00');
+      const curr = new Date(sorted[i] + 'T00:00:00');
+      const diff = (curr - prev) / 86400000;
+      if (diff === 1) { run++; longest = Math.max(longest, run); }
+      else run = 1;
+    }
+
+    return { current, longest, total };
+  }
+
+  function isFuture(y, m, d) {
+    const t = new Date();
+    const compare = new Date(y, m, d);
+    const todayDate = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    return compare > todayDate;
+  }
+
+  function isToday(y, m, d) {
+    const t = new Date();
+    return y === t.getFullYear() && m === t.getMonth() && d === t.getDate();
+  }
+
+  function render() {
+    const days = load();
+    const cal = document.getElementById('calendar');
+    cal.innerHTML = '';
+
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('monthLabel').textContent = `${months[viewMonth]} ${viewYear}`;
+
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'day empty';
+      cal.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const el = document.createElement('div');
+      const key = dateStr(viewYear, viewMonth, d);
+      const future = isFuture(viewYear, viewMonth, d);
+      const todayFlag = isToday(viewYear, viewMonth, d);
+
+      let cls = 'day';
+      if (days.has(key)) cls += ' completed';
+      if (todayFlag) cls += ' today';
+      if (future) cls += ' future';
+      el.className = cls;
+      el.textContent = d;
+
+      if (!future) {
+        el.addEventListener('click', () => toggle(key));
+      }
+
+      cal.appendChild(el);
+    }
+
+    const s = calcStreaks();
+    document.getElementById('currentStreak').textContent = s.current;
+    document.getElementById('longestStreak').textContent = s.longest;
+    document.getElementById('totalDays').textContent = s.total;
+
+    const btn = document.getElementById('todayBtn');
+    const todayDone = days.has(today());
+    if (todayDone) {
+      btn.textContent = 'Undo Today';
+      btn.className = 'today-button unmark';
+    } else {
+      btn.textContent = 'Done Today';
+      btn.className = 'today-button mark';
+    }
+  }
+
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+
+  document.getElementById('todayBtn').addEventListener('click', () => toggle(today()));
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    viewMonth--;
+    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    render();
+  });
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    viewMonth++;
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    render();
+  });
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const days = load();
+    const data = JSON.stringify([...days].sort(), null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `yoga-backup-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showMsg('Backup saved');
+  });
+
+  // Import
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (!Array.isArray(imported)) throw new Error('Invalid format');
+        const existing = load();
+        imported.forEach(d => existing.add(d));
+        save(existing);
+        render();
+        showMsg(`Imported ${imported.length} days`);
+      } catch {
+        showMsg('Invalid backup file');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  function showMsg(text) {
+    const el = document.getElementById('backupMsg');
+    el.textContent = text;
+    setTimeout(() => el.textContent = '', 3000);
+  }
+
+  render();
+</script>
+</body>
+</html>
