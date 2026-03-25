@@ -1,7 +1,7 @@
 {
   "name": "Yoga Tracker",
   "short_name": "Yoga",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#212e53",
   "theme_color": "#212e53",
