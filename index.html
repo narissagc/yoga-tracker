@@ -33,33 +33,7 @@
     margin-bottom: 28px;
   }
 
-  .today-button {
-    width: auto;
-    min-width: 160px;
-    padding: 12px 28px;
-    border-radius: 50px;
-    border: none;
-    font-size: 17px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    margin-bottom: 22px;
-    letter-spacing: 0.5px;
-  }
 
-  .today-button:active {
-    transform: scale(0.97);
-  }
-
-  .today-button.mark {
-    background: #ce6a6b;
-    color: #fff;
-  }
-
-  .today-button.unmark {
-    background: #2d3a5c;
-    color: #7a8aab;
-  }
 
   .stats {
     display: flex;
@@ -193,6 +167,39 @@
     background: rgba(74, 145, 158, 0.12);
   }
 
+  /* ── NEW: weekly graph section ── */
+  .graph-section {
+    width: 100%;
+    max-width: 340px;
+    margin-top: 28px;
+  }
+
+  .graph-label {
+    font-size: 11px;
+    color: #4a919e;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .graph-chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 160px;
+  }
+
+  .graph-ends {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .graph-ends span {
+    font-size: 10px;
+    color: #4a6a8a;
+  }
+  /* ── END new styles ── */
+
   .backup-section {
     margin-top: 32px;
     display: flex;
@@ -228,8 +235,6 @@
 
 <h1>Yoga</h1>
 
-<button class="today-button" id="todayBtn"></button>
-
 <div class="stats">
   <div class="stat">
     <div class="stat-value" id="currentStreak">0</div>
@@ -259,12 +264,27 @@
 
 <div class="calendar" id="calendar"></div>
 
+<!-- ── NEW: weekly graph ── -->
+<div class="graph-section">
+  <p class="graph-label">Last 12 weeks</p>
+  <div class="graph-chart-wrap">
+    <canvas id="weeklyChart" role="img" aria-label="Bar chart of yoga days per week over the last 12 weeks">Weekly yoga practice over the last 12 weeks.</canvas>
+  </div>
+  <div class="graph-ends">
+    <span>12 weeks ago</span>
+    <span>this week</span>
+  </div>
+</div>
+<!-- ── END new HTML ── -->
+
 <div class="backup-section">
   <button class="backup-btn" id="exportBtn">Export</button>
   <button class="backup-btn" id="importBtn">Import</button>
   <input type="file" id="importFile" accept=".json" style="display:none">
 </div>
 <div class="backup-msg" id="backupMsg"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script><!-- NEW: Chart.js library -->
 
 <script>
   const STORAGE_KEY = 'yoga_days';
@@ -346,6 +366,96 @@
     return y === t.getFullYear() && m === t.getMonth() && d === t.getDate();
   }
 
+  // ── NEW: weekly graph logic ──
+  let weeklyChart = null;
+
+  function renderWeeklyGraph(days) {
+    const weeks = [];
+    const labels = [];
+
+    // Find the most recent Sunday
+    const cursor = new Date();
+    cursor.setHours(0, 0, 0, 0);
+    cursor.setDate(cursor.getDate() - cursor.getDay()); // rewind to Sunday
+
+    for (let w = 11; w >= 0; w--) {
+      const sunday = new Date(cursor);
+      sunday.setDate(cursor.getDate() - w * 7);
+
+      let count = 0;
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(sunday);
+        day.setDate(sunday.getDate() + d);
+        const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+        if (days.has(key)) count++;
+      }
+
+      weeks.push(count);
+      labels.push(sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    }
+
+    const colors = weeks.map(v => v >= 6 ? '#ce6a6b' : v >= 4 ? '#4a919e' : '#7a8aab');
+
+    if (weeklyChart) {
+      weeklyChart.data.datasets[0].data = weeks;
+      weeklyChart.data.datasets[0].backgroundColor = colors;
+      weeklyChart.data.labels = labels;
+      weeklyChart.update();
+    } else {
+      weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: weeks,
+            backgroundColor: colors,
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`
+              },
+              backgroundColor: '#1a2440',
+              titleColor: '#bed3c3',
+              bodyColor: '#ebaca2',
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#4a6a8a',
+                font: { size: 10 },
+                maxRotation: 45,
+                autoSkip: false,
+              },
+              grid: { display: false },
+              border: { display: false }
+            },
+            y: {
+              min: 0,
+              max: 7,
+              ticks: {
+                stepSize: 1,
+                color: '#4a6a8a',
+                font: { size: 10 },
+              },
+              grid: { color: 'rgba(45,58,92,0.6)' },
+              border: { display: false }
+            }
+          }
+        }
+      });
+    }
+  }
+  // ── END new graph logic ──
+
   function render() {
     const days = load();
     const cal = document.getElementById('calendar');
@@ -388,22 +498,13 @@
     document.getElementById('longestStreak').textContent = s.longest;
     document.getElementById('totalDays').textContent = s.total;
 
-    const btn = document.getElementById('todayBtn');
-    const todayDone = days.has(today());
-    if (todayDone) {
-      btn.textContent = 'Undo Today';
-      btn.className = 'today-button unmark';
-    } else {
-      btn.textContent = 'Done Today';
-      btn.className = 'today-button mark';
-    }
+    renderWeeklyGraph(days); // ── NEW: render graph on every update ──
   }
 
   const now = new Date();
   viewYear = now.getFullYear();
   viewMonth = now.getMonth();
 
-  document.getElementById('todayBtn').addEventListener('click', () => toggle(today()));
   document.getElementById('prevMonth').addEventListener('click', () => {
     viewMonth--;
     if (viewMonth < 0) { viewMonth = 11; viewYear--; }
