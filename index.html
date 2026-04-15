@@ -198,6 +198,27 @@
     font-size: 10px;
     color: #4a6a8a;
   }
+ .graph-toggle {
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #2d3a5c;
+}
+
+.graph-toggle button {
+  background: none;
+  border: none;
+  color: #4a6a8a;
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.graph-toggle button.active {
+  background: #4a919e;
+  color: #fff;
+}
   /* ── END new styles ── */
 
   .backup-section {
@@ -266,13 +287,19 @@
 
 <!-- ── NEW: weekly graph ── -->
 <div class="graph-section">
-  <p class="graph-label">Last 12 weeks</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+  <p class="graph-label" id="graphLabel">Last 12 weeks</p>
+  <div class="graph-toggle">
+    <button id="btnWeekly" class="active">Weekly</button>
+    <button id="btnMonthly">Monthly</button>
+  </div>
+</div>
   <div class="graph-chart-wrap">
     <canvas id="weeklyChart" role="img" aria-label="Bar chart of yoga days per week over the last 12 weeks">Weekly yoga practice over the last 12 weeks.</canvas>
   </div>
   <div class="graph-ends">
-    <span>12 weeks ago</span>
-    <span>this week</span>
+    <span id="leftLabel">12 weeks ago</span>
+  <span id="rightLabel">this week</span>
   </div>
 </div>
 <!-- ── END new HTML ── -->
