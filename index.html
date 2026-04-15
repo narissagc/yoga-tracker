@@ -503,14 +503,7 @@ function renderWeeklyGraph(days) {
       document.getElementById('rightLabel').textContent = 'this week';
       renderWeeklyGraph(load());
     });
-
-    document.getElementById('btnMonthly').addEventListener('click', () => {
-      setToggle('monthly');
-      document.getElementById('graphLabel').textContent = 'Last 12 months';
-      document.getElementById('leftLabel').textContent = '12 months ago';
-      document.getElementById('rightLabel').textContent = 'this month';
-      renderWeeklyGraph(load());
-    });
+   
   }
 }
 
