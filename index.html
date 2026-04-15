@@ -408,6 +408,18 @@ function setToggle(active) {
   document.getElementById('btnMonthly').classList.toggle('active', active === 'monthly');
 }
 
+function barColors(data, max) {
+  return data.map(v => {
+    const p = v / max;
+    return p >= 0.8 ? '#ce6a6b' : p >= 0.5 ? '#4a919e' : '#7a8aab';
+  });
+}
+
+function setToggle(active) {
+  document.getElementById('btnWeekly').classList.toggle('active', active === 'weekly');
+  document.getElementById('btnMonthly').classList.toggle('active', active === 'monthly');
+}
+
 function renderWeeklyGraph(days) {
   const weeks = [], weekLabels = [];
   const cursor = new Date();
@@ -503,6 +515,16 @@ function renderWeeklyGraph(days) {
       document.getElementById('rightLabel').textContent = 'this week';
       renderWeeklyGraph(load());
     });
+
+    document.getElementById('btnMonthly').addEventListener('click', () => {
+      setToggle('monthly');
+      document.getElementById('graphLabel').textContent = 'Last 12 months';
+      document.getElementById('leftLabel').textContent = '12 months ago';
+      document.getElementById('rightLabel').textContent = 'this month';
+      renderWeeklyGraph(load());
+    });
+  }
+}
    
   }
 }
