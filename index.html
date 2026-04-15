@@ -396,9 +396,123 @@
   // ── NEW: weekly graph logic ──
   let weeklyChart = null;
 
-  function renderWeeklyGraph(days) {
-    const weeks = [];
-    const labels = [];
+  function barColors(data, max) {
+  return data.map(v => {
+    const p = v / max;
+    return p >= 0.8 ? '#ce6a6b' : p >= 0.5 ? '#4a919e' : '#7a8aab';
+  });
+}
+
+function setToggle(active) {
+  document.getElementById('btnWeekly').classList.toggle('active', active === 'weekly');
+  document.getElementById('btnMonthly').classList.toggle('active', active === 'monthly');
+}
+
+function renderWeeklyGraph(days) {
+  const weeks = [], weekLabels = [];
+  const cursor = new Date();
+  cursor.setHours(0,0,0,0);
+  cursor.setDate(cursor.getDate() - cursor.getDay());
+
+  for (let w = 11; w >= 0; w--) {
+    const sunday = new Date(cursor);
+    sunday.setDate(cursor.getDate() - w * 7);
+    let count = 0;
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(sunday);
+      day.setDate(sunday.getDate() + d);
+      const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+      if (days.has(key)) count++;
+    }
+    weeks.push(count);
+    weekLabels.push(sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  }
+
+  const months = [], monthLabels = [];
+  const now = new Date();
+  for (let m = 11; m >= 0; m--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    const y = d.getFullYear(), mo = d.getMonth();
+    const daysInMonth = new Date(y, mo + 1, 0).getDate();
+    let count = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${y}-${String(mo+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if (days.has(key)) count++;
+    }
+    months.push(count);
+    monthLabels.push(d.toLocaleDateString('en-US', { month: 'short' }));
+  }
+
+  const isWeekly = !weeklyChart || document.getElementById('btnWeekly').classList.contains('active');
+  const data = isWeekly ? weeks : months;
+  const labels = isWeekly ? weekLabels : monthLabels;
+  const max = isWeekly ? 7 : 31;
+  const stepSize = isWeekly ? 1 : 5;
+
+  if (weeklyChart) {
+    weeklyChart.data.labels = labels;
+    weeklyChart.data.datasets[0].data = data;
+    weeklyChart.data.datasets[0].backgroundColor = barColors(data, max);
+    weeklyChart.options.scales.y.max = max;
+    weeklyChart.options.scales.y.ticks.stepSize = stepSize;
+    weeklyChart.update();
+  } else {
+    weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: barColors(data, max),
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}` },
+            backgroundColor: '#1a2440',
+            titleColor: '#bed3c3',
+            bodyColor: '#ebaca2',
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#4a6a8a', font: { size: 10 }, maxRotation: 45, autoSkip: false },
+            grid: { display: false },
+            border: { display: false }
+          },
+          y: {
+            min: 0, max,
+            ticks: { stepSize, color: '#4a6a8a', font: { size: 10 } },
+            grid: { color: 'rgba(45,58,92,0.6)' },
+            border: { display: false }
+          }
+        }
+      }
+    });
+
+    document.getElementById('btnWeekly').addEventListener('click', () => {
+      setToggle('weekly');
+      document.getElementById('graphLabel').textContent = 'Last 12 weeks';
+      document.getElementById('leftLabel').textContent = '12 weeks ago';
+      document.getElementById('rightLabel').textContent = 'this week';
+      renderWeeklyGraph(load());
+    });
+
+    document.getElementById('btnMonthly').addEventListener('click', () => {
+      setToggle('monthly');
+      document.getElementById('graphLabel').textContent = 'Last 12 months';
+      document.getElementById('leftLabel').textContent = '12 months ago';
+      document.getElementById('rightLabel').textContent = 'this month';
+      renderWeeklyGraph(load());
+    });
+  }
+}
 
     // Find the most recent Sunday
     const cursor = new Date();
