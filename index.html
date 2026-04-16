@@ -275,12 +275,13 @@
   <div class="graph-header">
     <p class="graph-label" id="graphLabel">Last 12 weeks</p>
     <div class="graph-toggle">
+      <button id="btnDays">By day</button>
       <button id="btnWeekly" class="active">Weekly</button>
       <button id="btnMonthly">Monthly</button>
     </div>
   </div>
   <div class="graph-chart-wrap">
-    <canvas id="weeklyChart" role="img" aria-label="Bar chart of yoga days over time">Yoga practice frequency over time.</canvas>
+    <canvas id="yogaChart" role="img" aria-label="Bar chart of yoga days over time">Yoga practice frequency over time.</canvas>
   </div>
   <div class="graph-ends">
     <span id="leftLabel">12 weeks ago</span>
@@ -300,6 +301,7 @@
   const STORAGE_KEY = 'yoga_days';
   let viewYear, viewMonth;
   let yogaChart = null;
+  let currentMode = 'weekly';
 
   function today() {
     const d = new Date();
@@ -368,24 +370,28 @@
     return y === t.getFullYear() && m === t.getMonth() && d === t.getDate();
   }
 
-  function barColors(data, max) {
+  // Teal gradient: dark muted teal for low values, bright teal for high
+  function tealColors(data, max) {
     return data.map(v => {
-      const p = v / max;
-      return p >= 0.8 ? '#ce6a6b' : p >= 0.5 ? '#4a919e' : '#7a8aab';
+      const p = Math.min(v / max, 1);
+      const r = Math.round(30 + (74 - 30) * (1 - p));
+      const g = Math.round(80 + (165 - 80) * p);
+      const b = Math.round(90 + (158 - 90) * p);
+      return `rgb(${r},${g},${b})`;
     });
   }
 
-  function setToggle(active) {
-    document.getElementById('btnWeekly').classList.toggle('active', active === 'weekly');
-    document.getElementById('btnMonthly').classList.toggle('active', active === 'monthly');
+  function setToggle(mode) {
+    ['btnDays', 'btnWeekly', 'btnMonthly'].forEach(id => {
+      document.getElementById(id).classList.remove('active');
+    });
+    const map = { days: 'btnDays', weekly: 'btnWeekly', monthly: 'btnMonthly' };
+    document.getElementById(map[mode]).classList.add('active');
   }
 
-  function renderGraph(days) {
-    const isWeekly = document.getElementById('btnWeekly').classList.contains('active');
-    let data, labels, max, stepSize;
-
-    if (isWeekly) {
-      data = []; labels = [];
+  function getGraphData(mode, days) {
+    if (mode === 'weekly') {
+      const data = [], labels = [];
       const cursor = new Date();
       cursor.setHours(0, 0, 0, 0);
       cursor.setDate(cursor.getDate() - cursor.getDay());
@@ -402,9 +408,10 @@
         data.push(count);
         labels.push(sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
       }
-      max = 7; stepSize = 1;
-    } else {
-      data = []; labels = [];
+      return { data, labels, max: 7, stepSize: 1, pctMode: false };
+
+    } else if (mode === 'monthly') {
+      const data = [], labels = [];
       const now = new Date();
       for (let m = 11; m >= 0; m--) {
         const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
@@ -418,24 +425,59 @@
         data.push(count);
         labels.push(d.toLocaleDateString('en-US', { month: 'short' }));
       }
-      max = 31; stepSize = 5;
+      return { data, labels, max: 31, stepSize: 5, pctMode: false };
+
+    } else {
+      // By day of week — % of available days practiced
+      const counts = [0, 0, 0, 0, 0, 0, 0];
+      const totals = [0, 0, 0, 0, 0, 0, 0];
+      const now = new Date();
+      const nowTime = now.getTime();
+
+      // Find earliest date in data
+      const sorted = [...days].sort();
+      if (sorted.length === 0) return {
+        data: [0,0,0,0,0,0,0],
+        labels: ['Su','M','Tu','W','Th','F','Sa'],
+        max: 100, stepSize: 25, pctMode: true
+      };
+
+      const start = new Date(sorted[0] + 'T00:00:00');
+      const cursor = new Date(start);
+      while (cursor <= now) {
+        const dow = cursor.getDay();
+        totals[dow]++;
+        const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
+        if (days.has(key)) counts[dow]++;
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      const data = totals.map((t, i) => t === 0 ? 0 : Math.round((counts[i] / t) * 100));
+      return { data, labels: ['Su','M','Tu','W','Th','F','Sa'], max: 100, stepSize: 25, pctMode: true };
     }
+  }
+
+  function renderGraph(days) {
+    const { data, labels, max, stepSize, pctMode } = getGraphData(currentMode, days);
 
     if (yogaChart) {
       yogaChart.data.labels = labels;
       yogaChart.data.datasets[0].data = data;
-      yogaChart.data.datasets[0].backgroundColor = barColors(data, max);
+      yogaChart.data.datasets[0].backgroundColor = tealColors(data, max);
       yogaChart.options.scales.y.max = max;
       yogaChart.options.scales.y.ticks.stepSize = stepSize;
+      yogaChart.options.scales.y.ticks.callback = pctMode ? v => v + '%' : undefined;
+      yogaChart.options.plugins.tooltip.callbacks.label = ctx =>
+        pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`;
       yogaChart.update();
     } else {
-      yogaChart = new Chart(document.getElementById('weeklyChart'), {
+      yogaChart = new Chart(document.getElementById('yogaChart'), {
         type: 'bar',
         data: {
           labels,
           datasets: [{
             data,
-            backgroundColor: barColors(data, max),
+            backgroundColor: tealColors(data, max),
             borderRadius: 6,
             borderSkipped: false,
           }]
@@ -446,7 +488,9 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: { label: ctx => `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}` },
+              callbacks: {
+                label: ctx => pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`
+              },
               backgroundColor: '#1a2440',
               titleColor: '#bed3c3',
               bodyColor: '#ebaca2',
@@ -460,7 +504,7 @@
             },
             y: {
               min: 0, max,
-              ticks: { stepSize, color: '#4a6a8a', font: { size: 10 } },
+              ticks: { stepSize, color: '#4a6a8a', font: { size: 10 }, callback: pctMode ? v => v + '%' : undefined },
               grid: { color: 'rgba(45,58,92,0.6)' },
               border: { display: false }
             }
@@ -469,6 +513,7 @@
       });
 
       document.getElementById('btnWeekly').addEventListener('click', () => {
+        currentMode = 'weekly';
         setToggle('weekly');
         document.getElementById('graphLabel').textContent = 'Last 12 weeks';
         document.getElementById('leftLabel').textContent = '12 weeks ago';
@@ -477,10 +522,20 @@
       });
 
       document.getElementById('btnMonthly').addEventListener('click', () => {
+        currentMode = 'monthly';
         setToggle('monthly');
         document.getElementById('graphLabel').textContent = 'Last 12 months';
         document.getElementById('leftLabel').textContent = '12 months ago';
         document.getElementById('rightLabel').textContent = 'this month';
+        renderGraph(load());
+      });
+
+      document.getElementById('btnDays').addEventListener('click', () => {
+        currentMode = 'days';
+        setToggle('days');
+        document.getElementById('graphLabel').textContent = 'By day of week';
+        document.getElementById('leftLabel').textContent = '';
+        document.getElementById('rightLabel').textContent = '';
         renderGraph(load());
       });
     }
