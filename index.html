@@ -24,7 +24,6 @@
     padding-top: calc(env(safe-area-inset-top, 20px) + 20px);
   }
 
-  /* ── Activity toggle ── */
   .activity-toggle {
     display: flex;
     border-radius: 20px;
@@ -39,7 +38,7 @@
     color: #4a6a8a;
     font-size: 13px;
     font-weight: 500;
-    padding: 8px 24px;
+    padding: 8px 20px;
     cursor: pointer;
     letter-spacing: 0.5px;
     transition: background 0.15s, color 0.15s;
@@ -50,7 +49,6 @@
     color: #fff;
   }
 
-  /* ── Pages ── */
   .page { display: none; width: 100%; flex-direction: column; align-items: center; }
   .page.visible { display: flex; }
 
@@ -91,6 +89,17 @@
     height: 1px;
     background: #2d3a5c;
     margin-bottom: 24px;
+  }
+
+  .section-title {
+    width: 100%;
+    max-width: 340px;
+    font-size: 11px;
+    color: #4a919e;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    margin-top: 28px;
   }
 
   .month-nav {
@@ -165,14 +174,48 @@
   .day.future { color: #2d3a5c; cursor: default; }
   .day.today { border: 2px solid #4a919e; }
 
+  /* Yoga page */
   .yoga .day.completed { background: #ce6a6b; color: #fff; font-weight: 600; }
   .yoga .day.today.completed { border-color: #ebaca2; }
 
+  /* Bike page */
   .bike .day.completed { background: #5aa8d4; color: #fff; font-weight: 600; }
   .bike .day.today.completed { border-color: #a8d8f0; }
 
-  .day:not(.empty):not(.future):not(.completed):hover {
+  /* Overview calendar */
+  .overview .day.yoga-only { background: #ce6a6b; color: #fff; font-weight: 600; }
+  .overview .day.bike-only { background: #5aa8d4; color: #fff; font-weight: 600; }
+  .overview .day.both { background: #ce6a6b; color: #fff; font-weight: 600; border: 3px solid #5aa8d4; }
+  .overview .day.today { border: 2px solid #4a919e; }
+  .overview .day.today.both { border: 3px solid #5aa8d4; }
+  .overview .day { cursor: default; }
+
+  .day:not(.empty):not(.future):not(.completed):not(.yoga-only):not(.bike-only):not(.both):hover {
     background: rgba(74, 145, 158, 0.12);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    max-width: 340px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #4a6a8a;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
   }
 
   .graph-section {
@@ -221,7 +264,7 @@
   .graph-chart-wrap {
     position: relative;
     width: 100%;
-    height: 160px;
+    height: 140px;
   }
 
   .graph-ends {
@@ -263,13 +306,13 @@
 </head>
 <body>
 
-<!-- Activity toggle -->
 <div class="activity-toggle">
   <button id="toggleYoga" class="active" onclick="showPage('yoga')">Yoga</button>
   <button id="toggleBike" onclick="showPage('bike')">Bike</button>
+  <button id="toggleOverview" onclick="showPage('overview')">Overview</button>
 </div>
 
-<!-- Yoga page -->
+<!-- ── Yoga page (minimal) ── -->
 <div class="page yoga visible" id="pageYoga">
   <h1>Yoga</h1>
   <div class="stats">
@@ -287,23 +330,6 @@
     <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
   </div>
   <div class="calendar" id="yoga-calendar"></div>
-  <div class="graph-section">
-    <div class="graph-header">
-      <p class="graph-label" id="yoga-graphLabel">Last 12 weeks</p>
-      <div class="graph-toggle">
-        <button id="yoga-btnDays">By day</button>
-        <button id="yoga-btnWeekly" class="active">Weekly</button>
-        <button id="yoga-btnMonthly">Monthly</button>
-      </div>
-    </div>
-    <div class="graph-chart-wrap">
-      <canvas id="yoga-chart" role="img" aria-label="Yoga practice chart">Yoga practice frequency.</canvas>
-    </div>
-    <div class="graph-ends">
-      <span id="yoga-leftLabel">12 weeks ago</span>
-      <span id="yoga-rightLabel">this week</span>
-    </div>
-  </div>
   <div class="backup-section">
     <button class="backup-btn" id="yoga-exportBtn">Export</button>
     <button class="backup-btn" id="yoga-importBtn">Import</button>
@@ -312,7 +338,7 @@
   <div class="backup-msg" id="yoga-backupMsg"></div>
 </div>
 
-<!-- Bike page -->
+<!-- ── Bike page (minimal) ── -->
 <div class="page bike" id="pageBike">
   <h1>Bike</h1>
   <div class="stats">
@@ -330,23 +356,6 @@
     <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
   </div>
   <div class="calendar" id="bike-calendar"></div>
-  <div class="graph-section">
-    <div class="graph-header">
-      <p class="graph-label" id="bike-graphLabel">Last 12 weeks</p>
-      <div class="graph-toggle">
-        <button id="bike-btnDays">By day</button>
-        <button id="bike-btnWeekly" class="active">Weekly</button>
-        <button id="bike-btnMonthly">Monthly</button>
-      </div>
-    </div>
-    <div class="graph-chart-wrap">
-      <canvas id="bike-chart" role="img" aria-label="Bike ride chart">Bike ride frequency.</canvas>
-    </div>
-    <div class="graph-ends">
-      <span id="bike-leftLabel">12 weeks ago</span>
-      <span id="bike-rightLabel">this week</span>
-    </div>
-  </div>
   <div class="backup-section">
     <button class="backup-btn" id="bike-exportBtn">Export</button>
     <button class="backup-btn" id="bike-importBtn">Import</button>
@@ -355,15 +364,101 @@
   <div class="backup-msg" id="bike-backupMsg"></div>
 </div>
 
+<!-- ── Overview page ── -->
+<div class="page overview" id="pageOverview">
+  <h1>Overview</h1>
+
+  <!-- Combined stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="ov-currentStreak">0</div><div class="stat-label">Streak</div></div>
+    <div class="stat"><div class="stat-value" id="ov-longestStreak">0</div><div class="stat-label">Best</div></div>
+    <div class="stat"><div class="stat-value" id="ov-totalDays">0</div><div class="stat-label">Total</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Combined calendar -->
+  <div class="month-nav">
+    <button id="ov-prevMonth">&lsaquo;</button>
+    <span class="month-label" id="ov-monthLabel"></span>
+    <button id="ov-nextMonth">&rsaquo;</button>
+  </div>
+  <div class="weekday-header">
+    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+  </div>
+  <div class="calendar" id="ov-calendar"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ce6a6b"></div>Yoga</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5aa8d4"></div>Bike</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ce6a6b;border:2px solid #5aa8d4;width:10px;height:10px;border-radius:50%;"></div>Both</div>
+  </div>
+
+  <!-- Combined graph -->
+  <div class="graph-section">
+    <div class="graph-header">
+      <p class="graph-label" id="ov-graphLabel">Last 12 weeks</p>
+      <div class="graph-toggle">
+        <button id="ov-btnDays">By day</button>
+        <button id="ov-btnWeekly" class="active">Weekly</button>
+        <button id="ov-btnMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="graph-chart-wrap"><canvas id="ov-chart" role="img" aria-label="Combined activity chart">Combined activity.</canvas></div>
+    <div class="graph-ends">
+      <span id="ov-leftLabel">12 weeks ago</span>
+      <span id="ov-rightLabel">this week</span>
+    </div>
+  </div>
+
+  <!-- Yoga graph -->
+  <p class="section-title">Yoga</p>
+  <div class="graph-section" style="margin-top:0">
+    <div class="graph-header">
+      <p class="graph-label" id="ov-yoga-graphLabel">Last 12 weeks</p>
+      <div class="graph-toggle">
+        <button id="ov-yoga-btnDays">By day</button>
+        <button id="ov-yoga-btnWeekly" class="active">Weekly</button>
+        <button id="ov-yoga-btnMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="graph-chart-wrap"><canvas id="ov-yoga-chart" role="img" aria-label="Yoga chart">Yoga activity.</canvas></div>
+    <div class="graph-ends">
+      <span id="ov-yoga-leftLabel">12 weeks ago</span>
+      <span id="ov-yoga-rightLabel">this week</span>
+    </div>
+  </div>
+
+  <!-- Bike graph -->
+  <p class="section-title">Bike</p>
+  <div class="graph-section" style="margin-top:0">
+    <div class="graph-header">
+      <p class="graph-label" id="ov-bike-graphLabel">Last 12 weeks</p>
+      <div class="graph-toggle">
+        <button id="ov-bike-btnDays">By day</button>
+        <button id="ov-bike-btnWeekly" class="active">Weekly</button>
+        <button id="ov-bike-btnMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="graph-chart-wrap"><canvas id="ov-bike-chart" role="img" aria-label="Bike chart">Bike activity.</canvas></div>
+    <div class="graph-ends">
+      <span id="ov-bike-leftLabel">12 weeks ago</span>
+      <span id="ov-bike-rightLabel">this week</span>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function showPage(name) {
-    document.getElementById('pageYoga').classList.toggle('visible', name === 'yoga');
-    document.getElementById('pageBike').classList.toggle('visible', name === 'bike');
-    document.getElementById('toggleYoga').classList.toggle('active', name === 'yoga');
-    document.getElementById('toggleBike').classList.toggle('active', name === 'bike');
+    ['yoga','bike','overview'].forEach(p => {
+      document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('visible', p === name);
+      document.getElementById('toggle' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === name);
+    });
+    if (name === 'overview') renderOverview();
     window.scrollTo(0, 0);
   }
 
@@ -389,26 +484,22 @@
     const sorted = [...days].sort();
     const total = sorted.length;
     if (total === 0) return { current: 0, longest: 0, total: 0 };
-
     let current = 0;
     const t = new Date();
     const d = new Date(t.getFullYear(), t.getMonth(), t.getDate());
     if (!days.has(dateStr(d.getFullYear(), d.getMonth(), d.getDate())))
       d.setDate(d.getDate() - 1);
-
     while (true) {
       const key = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
       if (days.has(key)) { current++; d.setDate(d.getDate() - 1); }
       else break;
     }
-
     let longest = 1, run = 1;
     for (let i = 1; i < sorted.length; i++) {
-      const diff = (new Date(sorted[i] + 'T00:00:00') - new Date(sorted[i-1] + 'T00:00:00')) / 86400000;
+      const diff = (new Date(sorted[i]+'T00:00:00') - new Date(sorted[i-1]+'T00:00:00')) / 86400000;
       if (diff === 1) { run++; longest = Math.max(longest, run); }
       else run = 1;
     }
-
     return { current, longest, total };
   }
 
@@ -452,7 +543,6 @@
         labels.push(sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
       }
       return { data, labels, max: 7, stepSize: 1, pctMode: false };
-
     } else if (mode === 'monthly') {
       const data = [], labels = [];
       const now = new Date();
@@ -469,13 +559,12 @@
         labels.push(d.toLocaleDateString('en-US', { month: 'short' }));
       }
       return { data, labels, max: 31, stepSize: 5, pctMode: false };
-
     } else {
       const counts = [0,0,0,0,0,0,0], totals = [0,0,0,0,0,0,0];
       const sorted = [...days].sort();
       if (sorted.length === 0)
         return { data: [0,0,0,0,0,0,0], labels: ['Su','M','Tu','W','Th','F','Sa'], max: 100, stepSize: 25, pctMode: true };
-      const cursor = new Date(sorted[0] + 'T00:00:00');
+      const cursor = new Date(sorted[0]+'T00:00:00');
       const now = new Date(); now.setHours(0,0,0,0);
       while (cursor <= now) {
         const dow = cursor.getDay();
@@ -489,28 +578,19 @@
     }
   }
 
-  function createTracker(id, storageKey) {
-    let viewYear = new Date().getFullYear();
-    let viewMonth = new Date().getMonth();
+  function createGraph(canvasId, storageKey) {
     let chart = null;
     let currentMode = 'weekly';
+    const prefix = canvasId.replace('-chart', '');
 
-    function el(s) { return document.getElementById(`${id}-${s}`); }
-
-    function toggle(date) {
-      const days = loadDays(storageKey);
-      if (days.has(date)) days.delete(date);
-      else days.add(date);
-      saveDays(storageKey, days);
-      render();
-    }
+    function el(s) { return document.getElementById(`${prefix}-${s}`); }
 
     function setToggle(mode) {
       ['btnDays','btnWeekly','btnMonthly'].forEach(b => el(b).classList.remove('active'));
       el({ days: 'btnDays', weekly: 'btnWeekly', monthly: 'btnMonthly' }[mode]).classList.add('active');
     }
 
-    function renderGraph(days) {
+    function render(days) {
       const { data, labels, max, stepSize, pctMode } = getGraphData(currentMode, days);
       if (chart) {
         chart.data.labels = labels;
@@ -523,12 +603,11 @@
           pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`;
         chart.update();
       } else {
-        chart = new Chart(el('chart'), {
+        chart = new Chart(document.getElementById(canvasId), {
           type: 'bar',
           data: { labels, datasets: [{ data, backgroundColor: tealColors(data, max), borderRadius: 6, borderSkipped: false }] },
           options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -550,13 +629,30 @@
             el('graphLabel').textContent = label;
             el('leftLabel').textContent = left;
             el('rightLabel').textContent = right;
-            renderGraph(loadDays(storageKey));
+            render(loadDays(storageKey));
           });
         }
         setupTab('btnWeekly', 'weekly', 'Last 12 weeks', '12 weeks ago', 'this week');
         setupTab('btnMonthly', 'monthly', 'Last 12 months', '12 months ago', 'this month');
         setupTab('btnDays', 'days', 'By day of week', '', '');
       }
+    }
+
+    return { render };
+  }
+
+  // ── Minimal tracker (yoga/bike pages) ──
+  function createTracker(id, storageKey) {
+    let viewYear = new Date().getFullYear();
+    let viewMonth = new Date().getMonth();
+    function el(s) { return document.getElementById(`${id}-${s}`); }
+
+    function toggle(date) {
+      const days = loadDays(storageKey);
+      if (days.has(date)) days.delete(date);
+      else days.add(date);
+      saveDays(storageKey, days);
+      render();
     }
 
     function render() {
@@ -566,13 +662,9 @@
       el('monthLabel').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
       const firstDay = new Date(viewYear, viewMonth, 1).getDay();
       const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
       for (let i = 0; i < firstDay; i++) {
-        const e = document.createElement('div');
-        e.className = 'day empty';
-        cal.appendChild(e);
+        const e = document.createElement('div'); e.className = 'day empty'; cal.appendChild(e);
       }
-
       for (let d = 1; d <= daysInMonth; d++) {
         const e = document.createElement('div');
         const key = dateStr(viewYear, viewMonth, d);
@@ -581,25 +673,18 @@
         if (days.has(key)) cls += ' completed';
         if (isToday(viewYear, viewMonth, d)) cls += ' today';
         if (future) cls += ' future';
-        e.className = cls;
-        e.textContent = d;
+        e.className = cls; e.textContent = d;
         if (!future) e.addEventListener('click', () => toggle(key));
         cal.appendChild(e);
       }
-
       const s = calcStreaks(days);
       el('currentStreak').textContent = s.current;
       el('longestStreak').textContent = s.longest;
       el('totalDays').textContent = s.total;
-      renderGraph(days);
     }
 
-    el('prevMonth').addEventListener('click', () => {
-      viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render();
-    });
-    el('nextMonth').addEventListener('click', () => {
-      viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render();
-    });
+    el('prevMonth').addEventListener('click', () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
+    el('nextMonth').addEventListener('click', () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
 
     el('exportBtn').addEventListener('click', () => {
       const days = loadDays(storageKey);
@@ -607,18 +692,14 @@
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `${id}-backup-${todayKey()}.json`;
-      a.click();
+      a.href = url; a.download = `${id}-backup-${todayKey()}.json`; a.click();
       URL.revokeObjectURL(url);
-      showMsg('Backup saved');
+      showMsg(id, 'Backup saved');
     });
 
     el('importBtn').addEventListener('click', () => el('importFile').click());
-
     el('importFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const file = e.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {
@@ -628,20 +709,178 @@
           imported.forEach(d => existing.add(d));
           saveDays(storageKey, existing);
           render();
-          showMsg(`Imported ${imported.length} days`);
-        } catch { showMsg('Invalid backup file'); }
+          showMsg(id, `Imported ${imported.length} days`);
+        } catch { showMsg(id, 'Invalid backup file'); }
         e.target.value = '';
       };
       reader.readAsText(file);
     });
 
-    function showMsg(text) {
-      const e = el('backupMsg');
-      e.textContent = text;
+    function showMsg(id, text) {
+      const e = el('backupMsg'); e.textContent = text;
       setTimeout(() => e.textContent = '', 3000);
     }
 
     render();
+  }
+
+  // ── Overview page ──
+  let ovViewYear = new Date().getFullYear();
+  let ovViewMonth = new Date().getMonth();
+  const ovCombinedGraph = createGraph('ov-chart', null);
+  const ovYogaGraph = createGraph('ov-yoga-chart', 'yoga_days');
+  const ovBikeGraph = createGraph('ov-bike-chart', 'bike_days');
+  let ovGraphsInitialized = false;
+
+  // Override combined graph to use merged days
+  const _ovCombinedRender = ovCombinedGraph.render;
+
+  function renderOverview() {
+    const yogaDays = loadDays('yoga_days');
+    const bikeDays = loadDays('bike_days');
+    const combined = new Set([...yogaDays, ...bikeDays]);
+
+    // Stats
+    const s = calcStreaks(combined);
+    document.getElementById('ov-currentStreak').textContent = s.current;
+    document.getElementById('ov-longestStreak').textContent = s.longest;
+    document.getElementById('ov-totalDays').textContent = s.total;
+
+    // Calendar
+    const cal = document.getElementById('ov-calendar');
+    cal.innerHTML = '';
+    document.getElementById('ov-monthLabel').textContent = `${MONTH_NAMES[ovViewMonth]} ${ovViewYear}`;
+    const firstDay = new Date(ovViewYear, ovViewMonth, 1).getDay();
+    const daysInMonth = new Date(ovViewYear, ovViewMonth + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'day empty'; cal.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const e = document.createElement('div');
+      const key = dateStr(ovViewYear, ovViewMonth, d);
+      const future = isFuture(ovViewYear, ovViewMonth, d);
+      const hasYoga = yogaDays.has(key);
+      const hasBike = bikeDays.has(key);
+      let cls = 'day';
+      if (hasYoga && hasBike) cls += ' both';
+      else if (hasYoga) cls += ' yoga-only';
+      else if (hasBike) cls += ' bike-only';
+      if (isToday(ovViewYear, ovViewMonth, d)) cls += ' today';
+      if (future) cls += ' future';
+      e.className = cls; e.textContent = d;
+      cal.appendChild(e);
+    }
+
+    // Graphs
+    ovCombinedGraph.render(combined);
+    ovYogaGraph.render(yogaDays);
+    ovBikeGraph.render(bikeDays);
+  }
+
+  document.getElementById('ov-prevMonth').addEventListener('click', () => {
+    ovViewMonth--; if (ovViewMonth < 0) { ovViewMonth = 11; ovViewYear--; } renderOverview();
+  });
+  document.getElementById('ov-nextMonth').addEventListener('click', () => {
+    ovViewMonth++; if (ovViewMonth > 11) { ovViewMonth = 0; ovViewYear++; } renderOverview();
+  });
+
+  // Wire up combined graph tabs manually since it uses merged data
+  function setupOvTab(btnId, mode, label, left, right) {
+    document.getElementById(btnId).addEventListener('click', () => {
+      ['ov-btnDays','ov-btnWeekly','ov-btnMonthly'].forEach(b => document.getElementById(b).classList.remove('active'));
+      document.getElementById(btnId).classList.add('active');
+      document.getElementById('ov-graphLabel').textContent = label;
+      document.getElementById('ov-leftLabel').textContent = left;
+      document.getElementById('ov-rightLabel').textContent = right;
+      const combined = new Set([...loadDays('yoga_days'), ...loadDays('bike_days')]);
+      // Temporarily override mode
+      const origMode = ovCombinedGraph._mode;
+      ovCombinedGraph._pendingMode = mode;
+      renderOverviewCombinedGraph(mode);
+    });
+  }
+
+  let ovCombinedMode = 'weekly';
+  let ovCombinedChartInstance = null;
+
+  function renderOverviewCombinedGraph(mode) {
+    if (mode) ovCombinedMode = mode;
+    const combined = new Set([...loadDays('yoga_days'), ...loadDays('bike_days')]);
+    const { data, labels, max, stepSize, pctMode } = getGraphData(ovCombinedMode, combined);
+    if (ovCombinedChartInstance) {
+      ovCombinedChartInstance.data.labels = labels;
+      ovCombinedChartInstance.data.datasets[0].data = data;
+      ovCombinedChartInstance.data.datasets[0].backgroundColor = tealColors(data, max);
+      ovCombinedChartInstance.options.scales.y.max = max;
+      ovCombinedChartInstance.options.scales.y.ticks.stepSize = stepSize;
+      ovCombinedChartInstance.options.scales.y.ticks.callback = pctMode ? v => v + '%' : undefined;
+      ovCombinedChartInstance.options.plugins.tooltip.callbacks.label = ctx =>
+        pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`;
+      ovCombinedChartInstance.update();
+    } else {
+      ovCombinedChartInstance = new Chart(document.getElementById('ov-chart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ data, backgroundColor: tealColors(data, max), borderRadius: 6, borderSkipped: false }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: { label: ctx => pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}` },
+              backgroundColor: '#1a2440', titleColor: '#bed3c3', bodyColor: '#ebaca2',
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#4a6a8a', font: { size: 10 }, maxRotation: 45, autoSkip: false }, grid: { display: false }, border: { display: false } },
+            y: { min: 0, max, ticks: { stepSize, color: '#4a6a8a', font: { size: 10 }, callback: pctMode ? v => v + '%' : undefined }, grid: { color: 'rgba(45,58,92,0.6)' }, border: { display: false } }
+          }
+        }
+      });
+    }
+  }
+
+  setupOvTab('ov-btnWeekly', 'weekly', 'Last 12 weeks', '12 weeks ago', 'this week');
+  setupOvTab('ov-btnMonthly', 'monthly', 'Last 12 months', '12 months ago', 'this month');
+  setupOvTab('ov-btnDays', 'days', 'By day of week', '', '');
+
+  // Override renderOverview to use the standalone combined graph
+  function renderOverview() {
+    const yogaDays = loadDays('yoga_days');
+    const bikeDays = loadDays('bike_days');
+    const combined = new Set([...yogaDays, ...bikeDays]);
+
+    const s = calcStreaks(combined);
+    document.getElementById('ov-currentStreak').textContent = s.current;
+    document.getElementById('ov-longestStreak').textContent = s.longest;
+    document.getElementById('ov-totalDays').textContent = s.total;
+
+    const cal = document.getElementById('ov-calendar');
+    cal.innerHTML = '';
+    document.getElementById('ov-monthLabel').textContent = `${MONTH_NAMES[ovViewMonth]} ${ovViewYear}`;
+    const firstDay = new Date(ovViewYear, ovViewMonth, 1).getDay();
+    const daysInMonth = new Date(ovViewYear, ovViewMonth + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'day empty'; cal.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const e = document.createElement('div');
+      const key = dateStr(ovViewYear, ovViewMonth, d);
+      const future = isFuture(ovViewYear, ovViewMonth, d);
+      const hasYoga = yogaDays.has(key);
+      const hasBike = bikeDays.has(key);
+      let cls = 'day';
+      if (hasYoga && hasBike) cls += ' both';
+      else if (hasYoga) cls += ' yoga-only';
+      else if (hasBike) cls += ' bike-only';
+      if (isToday(ovViewYear, ovViewMonth, d)) cls += ' today';
+      if (future) cls += ' future';
+      e.className = cls; e.textContent = d;
+      cal.appendChild(e);
+    }
+
+    renderOverviewCombinedGraph();
+    ovYogaGraph.render(yogaDays);
+    ovBikeGraph.render(bikeDays);
   }
 
   createTracker('yoga', 'yoga_days');
