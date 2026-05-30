@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Yoga">
+<meta name="apple-mobile-web-app-title" content="Tracker">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Yoga Tracker</title>
+<title>Tracker</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -20,9 +20,39 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px 16px;
-    padding-top: calc(env(safe-area-inset-top, 20px) + 28px);
+    padding: 20px 16px 40px;
+    padding-top: calc(env(safe-area-inset-top, 20px) + 20px);
   }
+
+  /* ── Activity toggle ── */
+  .activity-toggle {
+    display: flex;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #2d3a5c;
+    margin-bottom: 28px;
+  }
+
+  .activity-toggle button {
+    background: none;
+    border: none;
+    color: #4a6a8a;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 24px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .activity-toggle button.active {
+    background: #4a919e;
+    color: #fff;
+  }
+
+  /* ── Pages ── */
+  .page { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .page.visible { display: flex; }
 
   h1 {
     font-size: 26px;
@@ -82,9 +112,7 @@
     border-radius: 50%;
   }
 
-  .month-nav button:active {
-    background: rgba(74, 145, 158, 0.15);
-  }
+  .month-nav button:active { background: rgba(74, 145, 158, 0.15); }
 
   .month-label {
     font-size: 16px;
@@ -134,16 +162,14 @@
 
   .day:active { transform: scale(0.88); }
   .day.empty { cursor: default; }
-
-  .day.completed {
-    background: #ce6a6b;
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .day.today { border: 2px solid #4a919e; }
-  .day.today.completed { border: 2px solid #ebaca2; }
   .day.future { color: #2d3a5c; cursor: default; }
+  .day.today { border: 2px solid #4a919e; }
+
+  .yoga .day.completed { background: #ce6a6b; color: #fff; font-weight: 600; }
+  .yoga .day.today.completed { border-color: #ebaca2; }
+
+  .bike .day.completed { background: #5aa8d4; color: #fff; font-weight: 600; }
+  .bike .day.today.completed { border-color: #a8d8f0; }
 
   .day:not(.empty):not(.future):not(.completed):hover {
     background: rgba(74, 145, 158, 0.12);
@@ -204,10 +230,7 @@
     margin-top: 6px;
   }
 
-  .graph-ends span {
-    font-size: 10px;
-    color: #4a6a8a;
-  }
+  .graph-ends span { font-size: 10px; color: #4a6a8a; }
 
   .backup-section {
     margin-top: 32px;
@@ -240,70 +263,111 @@
 </head>
 <body>
 
-<h1>Yoga</h1>
-
-<div class="stats">
-  <div class="stat">
-    <div class="stat-value" id="currentStreak">0</div>
-    <div class="stat-label">Streak</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value" id="longestStreak">0</div>
-    <div class="stat-label">Best</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value" id="totalDays">0</div>
-    <div class="stat-label">Total</div>
-  </div>
+<!-- Activity toggle -->
+<div class="activity-toggle">
+  <button id="toggleYoga" class="active" onclick="showPage('yoga')">Yoga</button>
+  <button id="toggleBike" onclick="showPage('bike')">Bike</button>
 </div>
 
-<div class="divider"></div>
-
-<div class="month-nav">
-  <button id="prevMonth">&lsaquo;</button>
-  <span class="month-label" id="monthLabel"></span>
-  <button id="nextMonth">&rsaquo;</button>
-</div>
-
-<div class="weekday-header">
-  <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-</div>
-
-<div class="calendar" id="calendar"></div>
-
-<div class="graph-section">
-  <div class="graph-header">
-    <p class="graph-label" id="graphLabel">Last 12 weeks</p>
-    <div class="graph-toggle">
-      <button id="btnDays">By day</button>
-      <button id="btnWeekly" class="active">Weekly</button>
-      <button id="btnMonthly">Monthly</button>
+<!-- Yoga page -->
+<div class="page yoga visible" id="pageYoga">
+  <h1>Yoga</h1>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="yoga-currentStreak">0</div><div class="stat-label">Streak</div></div>
+    <div class="stat"><div class="stat-value" id="yoga-longestStreak">0</div><div class="stat-label">Best</div></div>
+    <div class="stat"><div class="stat-value" id="yoga-totalDays">0</div><div class="stat-label">Total</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="month-nav">
+    <button id="yoga-prevMonth">&lsaquo;</button>
+    <span class="month-label" id="yoga-monthLabel"></span>
+    <button id="yoga-nextMonth">&rsaquo;</button>
+  </div>
+  <div class="weekday-header">
+    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+  </div>
+  <div class="calendar" id="yoga-calendar"></div>
+  <div class="graph-section">
+    <div class="graph-header">
+      <p class="graph-label" id="yoga-graphLabel">Last 12 weeks</p>
+      <div class="graph-toggle">
+        <button id="yoga-btnDays">By day</button>
+        <button id="yoga-btnWeekly" class="active">Weekly</button>
+        <button id="yoga-btnMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="graph-chart-wrap">
+      <canvas id="yoga-chart" role="img" aria-label="Yoga practice chart">Yoga practice frequency.</canvas>
+    </div>
+    <div class="graph-ends">
+      <span id="yoga-leftLabel">12 weeks ago</span>
+      <span id="yoga-rightLabel">this week</span>
     </div>
   </div>
-  <div class="graph-chart-wrap">
-    <canvas id="yogaChart" role="img" aria-label="Bar chart of yoga days over time">Yoga practice frequency over time.</canvas>
+  <div class="backup-section">
+    <button class="backup-btn" id="yoga-exportBtn">Export</button>
+    <button class="backup-btn" id="yoga-importBtn">Import</button>
+    <input type="file" id="yoga-importFile" accept=".json" style="display:none">
   </div>
-  <div class="graph-ends">
-    <span id="leftLabel">12 weeks ago</span>
-    <span id="rightLabel">this week</span>
-  </div>
+  <div class="backup-msg" id="yoga-backupMsg"></div>
 </div>
 
-<div class="backup-section">
-  <button class="backup-btn" id="exportBtn">Export</button>
-  <button class="backup-btn" id="importBtn">Import</button>
-  <input type="file" id="importFile" accept=".json" style="display:none">
+<!-- Bike page -->
+<div class="page bike" id="pageBike">
+  <h1>Bike</h1>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="bike-currentStreak">0</div><div class="stat-label">Streak</div></div>
+    <div class="stat"><div class="stat-value" id="bike-longestStreak">0</div><div class="stat-label">Best</div></div>
+    <div class="stat"><div class="stat-value" id="bike-totalDays">0</div><div class="stat-label">Total</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="month-nav">
+    <button id="bike-prevMonth">&lsaquo;</button>
+    <span class="month-label" id="bike-monthLabel"></span>
+    <button id="bike-nextMonth">&rsaquo;</button>
+  </div>
+  <div class="weekday-header">
+    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+  </div>
+  <div class="calendar" id="bike-calendar"></div>
+  <div class="graph-section">
+    <div class="graph-header">
+      <p class="graph-label" id="bike-graphLabel">Last 12 weeks</p>
+      <div class="graph-toggle">
+        <button id="bike-btnDays">By day</button>
+        <button id="bike-btnWeekly" class="active">Weekly</button>
+        <button id="bike-btnMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="graph-chart-wrap">
+      <canvas id="bike-chart" role="img" aria-label="Bike ride chart">Bike ride frequency.</canvas>
+    </div>
+    <div class="graph-ends">
+      <span id="bike-leftLabel">12 weeks ago</span>
+      <span id="bike-rightLabel">this week</span>
+    </div>
+  </div>
+  <div class="backup-section">
+    <button class="backup-btn" id="bike-exportBtn">Export</button>
+    <button class="backup-btn" id="bike-importBtn">Import</button>
+    <input type="file" id="bike-importFile" accept=".json" style="display:none">
+  </div>
+  <div class="backup-msg" id="bike-backupMsg"></div>
 </div>
-<div class="backup-msg" id="backupMsg"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-  const STORAGE_KEY = 'yoga_days';
-  let viewYear, viewMonth;
-  let yogaChart = null;
-  let currentMode = 'weekly';
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-  function today() {
+  function showPage(name) {
+    document.getElementById('pageYoga').classList.toggle('visible', name === 'yoga');
+    document.getElementById('pageBike').classList.toggle('visible', name === 'bike');
+    document.getElementById('toggleYoga').classList.toggle('active', name === 'yoga');
+    document.getElementById('toggleBike').classList.toggle('active', name === 'bike');
+    window.scrollTo(0, 0);
+  }
+
+  function todayKey() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
@@ -312,26 +376,16 @@
     return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
 
-  function load() {
-    try {
-      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
-    } catch { return new Set(); }
+  function loadDays(key) {
+    try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+    catch { return new Set(); }
   }
 
-  function save(days) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...days]));
+  function saveDays(key, days) {
+    localStorage.setItem(key, JSON.stringify([...days]));
   }
 
-  function toggle(date) {
-    const days = load();
-    if (days.has(date)) days.delete(date);
-    else days.add(date);
-    save(days);
-    render();
-  }
-
-  function calcStreaks() {
-    const days = load();
+  function calcStreaks(days) {
     const sorted = [...days].sort();
     const total = sorted.length;
     if (total === 0) return { current: 0, longest: 0, total: 0 };
@@ -339,8 +393,8 @@
     let current = 0;
     const t = new Date();
     const d = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-    const todayKey = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
-    if (!days.has(todayKey)) d.setDate(d.getDate() - 1);
+    if (!days.has(dateStr(d.getFullYear(), d.getMonth(), d.getDate())))
+      d.setDate(d.getDate() - 1);
 
     while (true) {
       const key = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
@@ -350,9 +404,7 @@
 
     let longest = 1, run = 1;
     for (let i = 1; i < sorted.length; i++) {
-      const prev = new Date(sorted[i-1] + 'T00:00:00');
-      const curr = new Date(sorted[i] + 'T00:00:00');
-      const diff = (curr - prev) / 86400000;
+      const diff = (new Date(sorted[i] + 'T00:00:00') - new Date(sorted[i-1] + 'T00:00:00')) / 86400000;
       if (diff === 1) { run++; longest = Math.max(longest, run); }
       else run = 1;
     }
@@ -370,7 +422,6 @@
     return y === t.getFullYear() && m === t.getMonth() && d === t.getDate();
   }
 
-  // Teal gradient: dark muted teal for low values, bright teal for high
   function tealColors(data, max) {
     return data.map(v => {
       const p = Math.min(v / max, 1);
@@ -381,19 +432,11 @@
     });
   }
 
-  function setToggle(mode) {
-    ['btnDays', 'btnWeekly', 'btnMonthly'].forEach(id => {
-      document.getElementById(id).classList.remove('active');
-    });
-    const map = { days: 'btnDays', weekly: 'btnWeekly', monthly: 'btnMonthly' };
-    document.getElementById(map[mode]).classList.add('active');
-  }
-
   function getGraphData(mode, days) {
     if (mode === 'weekly') {
       const data = [], labels = [];
       const cursor = new Date();
-      cursor.setHours(0, 0, 0, 0);
+      cursor.setHours(0,0,0,0);
       cursor.setDate(cursor.getDate() - cursor.getDay());
       for (let w = 11; w >= 0; w--) {
         const sunday = new Date(cursor);
@@ -428,22 +471,12 @@
       return { data, labels, max: 31, stepSize: 5, pctMode: false };
 
     } else {
-      // By day of week — % of available days practiced
-      const counts = [0, 0, 0, 0, 0, 0, 0];
-      const totals = [0, 0, 0, 0, 0, 0, 0];
-      const now = new Date();
-      const nowTime = now.getTime();
-
-      // Find earliest date in data
+      const counts = [0,0,0,0,0,0,0], totals = [0,0,0,0,0,0,0];
       const sorted = [...days].sort();
-      if (sorted.length === 0) return {
-        data: [0,0,0,0,0,0,0],
-        labels: ['Su','M','Tu','W','Th','F','Sa'],
-        max: 100, stepSize: 25, pctMode: true
-      };
-
-      const start = new Date(sorted[0] + 'T00:00:00');
-      const cursor = new Date(start);
+      if (sorted.length === 0)
+        return { data: [0,0,0,0,0,0,0], labels: ['Su','M','Tu','W','Th','F','Sa'], max: 100, stepSize: 25, pctMode: true };
+      const cursor = new Date(sorted[0] + 'T00:00:00');
+      const now = new Date(); now.setHours(0,0,0,0);
       while (cursor <= now) {
         const dow = cursor.getDay();
         totals[dow]++;
@@ -451,196 +484,168 @@
         if (days.has(key)) counts[dow]++;
         cursor.setDate(cursor.getDate() + 1);
       }
-
       const data = totals.map((t, i) => t === 0 ? 0 : Math.round((counts[i] / t) * 100));
       return { data, labels: ['Su','M','Tu','W','Th','F','Sa'], max: 100, stepSize: 25, pctMode: true };
     }
   }
 
-  function renderGraph(days) {
-    const { data, labels, max, stepSize, pctMode } = getGraphData(currentMode, days);
+  function createTracker(id, storageKey) {
+    let viewYear = new Date().getFullYear();
+    let viewMonth = new Date().getMonth();
+    let chart = null;
+    let currentMode = 'weekly';
 
-    if (yogaChart) {
-      yogaChart.data.labels = labels;
-      yogaChart.data.datasets[0].data = data;
-      yogaChart.data.datasets[0].backgroundColor = tealColors(data, max);
-      yogaChart.options.scales.y.max = max;
-      yogaChart.options.scales.y.ticks.stepSize = stepSize;
-      yogaChart.options.scales.y.ticks.callback = pctMode ? v => v + '%' : undefined;
-      yogaChart.options.plugins.tooltip.callbacks.label = ctx =>
-        pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`;
-      yogaChart.update();
-    } else {
-      yogaChart = new Chart(document.getElementById('yogaChart'), {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: tealColors(data, max),
-            borderRadius: 6,
-            borderSkipped: false,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`
-              },
-              backgroundColor: '#1a2440',
-              titleColor: '#bed3c3',
-              bodyColor: '#ebaca2',
-            }
-          },
-          scales: {
-            x: {
-              ticks: { color: '#4a6a8a', font: { size: 10 }, maxRotation: 45, autoSkip: false },
-              grid: { display: false },
-              border: { display: false }
+    function el(s) { return document.getElementById(`${id}-${s}`); }
+
+    function toggle(date) {
+      const days = loadDays(storageKey);
+      if (days.has(date)) days.delete(date);
+      else days.add(date);
+      saveDays(storageKey, days);
+      render();
+    }
+
+    function setToggle(mode) {
+      ['btnDays','btnWeekly','btnMonthly'].forEach(b => el(b).classList.remove('active'));
+      el({ days: 'btnDays', weekly: 'btnWeekly', monthly: 'btnMonthly' }[mode]).classList.add('active');
+    }
+
+    function renderGraph(days) {
+      const { data, labels, max, stepSize, pctMode } = getGraphData(currentMode, days);
+      if (chart) {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        chart.data.datasets[0].backgroundColor = tealColors(data, max);
+        chart.options.scales.y.max = max;
+        chart.options.scales.y.ticks.stepSize = stepSize;
+        chart.options.scales.y.ticks.callback = pctMode ? v => v + '%' : undefined;
+        chart.options.plugins.tooltip.callbacks.label = ctx =>
+          pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}`;
+        chart.update();
+      } else {
+        chart = new Chart(el('chart'), {
+          type: 'bar',
+          data: { labels, datasets: [{ data, backgroundColor: tealColors(data, max), borderRadius: 6, borderSkipped: false }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: { label: ctx => pctMode ? `${ctx.raw}% of ${ctx.label}s` : `${ctx.raw} ${ctx.raw === 1 ? 'day' : 'days'}` },
+                backgroundColor: '#1a2440', titleColor: '#bed3c3', bodyColor: '#ebaca2',
+              }
             },
-            y: {
-              min: 0, max,
-              ticks: { stepSize, color: '#4a6a8a', font: { size: 10 }, callback: pctMode ? v => v + '%' : undefined },
-              grid: { color: 'rgba(45,58,92,0.6)' },
-              border: { display: false }
+            scales: {
+              x: { ticks: { color: '#4a6a8a', font: { size: 10 }, maxRotation: 45, autoSkip: false }, grid: { display: false }, border: { display: false } },
+              y: { min: 0, max, ticks: { stepSize, color: '#4a6a8a', font: { size: 10 }, callback: pctMode ? v => v + '%' : undefined }, grid: { color: 'rgba(45,58,92,0.6)' }, border: { display: false } }
             }
           }
+        });
+
+        function setupTab(btnId, mode, label, left, right) {
+          el(btnId).addEventListener('click', () => {
+            currentMode = mode;
+            setToggle(mode);
+            el('graphLabel').textContent = label;
+            el('leftLabel').textContent = left;
+            el('rightLabel').textContent = right;
+            renderGraph(loadDays(storageKey));
+          });
         }
-      });
-
-      document.getElementById('btnWeekly').addEventListener('click', () => {
-        currentMode = 'weekly';
-        setToggle('weekly');
-        document.getElementById('graphLabel').textContent = 'Last 12 weeks';
-        document.getElementById('leftLabel').textContent = '12 weeks ago';
-        document.getElementById('rightLabel').textContent = 'this week';
-        renderGraph(load());
-      });
-
-      document.getElementById('btnMonthly').addEventListener('click', () => {
-        currentMode = 'monthly';
-        setToggle('monthly');
-        document.getElementById('graphLabel').textContent = 'Last 12 months';
-        document.getElementById('leftLabel').textContent = '12 months ago';
-        document.getElementById('rightLabel').textContent = 'this month';
-        renderGraph(load());
-      });
-
-      document.getElementById('btnDays').addEventListener('click', () => {
-        currentMode = 'days';
-        setToggle('days');
-        document.getElementById('graphLabel').textContent = 'By day of week';
-        document.getElementById('leftLabel').textContent = '';
-        document.getElementById('rightLabel').textContent = '';
-        renderGraph(load());
-      });
-    }
-  }
-
-  function render() {
-    const days = load();
-    const cal = document.getElementById('calendar');
-    cal.innerHTML = '';
-
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    document.getElementById('monthLabel').textContent = `${monthNames[viewMonth]} ${viewYear}`;
-
-    for (let i = 0; i < firstDay; i++) {
-      const el = document.createElement('div');
-      el.className = 'day empty';
-      cal.appendChild(el);
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const el = document.createElement('div');
-      const key = dateStr(viewYear, viewMonth, d);
-      const future = isFuture(viewYear, viewMonth, d);
-      const todayFlag = isToday(viewYear, viewMonth, d);
-      let cls = 'day';
-      if (days.has(key)) cls += ' completed';
-      if (todayFlag) cls += ' today';
-      if (future) cls += ' future';
-      el.className = cls;
-      el.textContent = d;
-      if (!future) el.addEventListener('click', () => toggle(key));
-      cal.appendChild(el);
-    }
-
-    const s = calcStreaks();
-    document.getElementById('currentStreak').textContent = s.current;
-    document.getElementById('longestStreak').textContent = s.longest;
-    document.getElementById('totalDays').textContent = s.total;
-
-    renderGraph(days);
-  }
-
-  const now = new Date();
-  viewYear = now.getFullYear();
-  viewMonth = now.getMonth();
-
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    viewMonth--;
-    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-    render();
-  });
-
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    viewMonth++;
-    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-    render();
-  });
-
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    const days = load();
-    const data = JSON.stringify([...days].sort(), null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `yoga-backup-${today()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showMsg('Backup saved');
-  });
-
-  document.getElementById('importBtn').addEventListener('click', () => {
-    document.getElementById('importFile').click();
-  });
-
-  document.getElementById('importFile').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const imported = JSON.parse(ev.target.result);
-        if (!Array.isArray(imported)) throw new Error('Invalid format');
-        const existing = load();
-        imported.forEach(d => existing.add(d));
-        save(existing);
-        render();
-        showMsg(`Imported ${imported.length} days`);
-      } catch {
-        showMsg('Invalid backup file');
+        setupTab('btnWeekly', 'weekly', 'Last 12 weeks', '12 weeks ago', 'this week');
+        setupTab('btnMonthly', 'monthly', 'Last 12 months', '12 months ago', 'this month');
+        setupTab('btnDays', 'days', 'By day of week', '', '');
       }
-      e.target.value = '';
-    };
-    reader.readAsText(file);
-  });
+    }
 
-  function showMsg(text) {
-    const el = document.getElementById('backupMsg');
-    el.textContent = text;
-    setTimeout(() => el.textContent = '', 3000);
+    function render() {
+      const days = loadDays(storageKey);
+      const cal = el('calendar');
+      cal.innerHTML = '';
+      el('monthLabel').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+      const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const e = document.createElement('div');
+        e.className = 'day empty';
+        cal.appendChild(e);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const e = document.createElement('div');
+        const key = dateStr(viewYear, viewMonth, d);
+        const future = isFuture(viewYear, viewMonth, d);
+        let cls = 'day';
+        if (days.has(key)) cls += ' completed';
+        if (isToday(viewYear, viewMonth, d)) cls += ' today';
+        if (future) cls += ' future';
+        e.className = cls;
+        e.textContent = d;
+        if (!future) e.addEventListener('click', () => toggle(key));
+        cal.appendChild(e);
+      }
+
+      const s = calcStreaks(days);
+      el('currentStreak').textContent = s.current;
+      el('longestStreak').textContent = s.longest;
+      el('totalDays').textContent = s.total;
+      renderGraph(days);
+    }
+
+    el('prevMonth').addEventListener('click', () => {
+      viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render();
+    });
+    el('nextMonth').addEventListener('click', () => {
+      viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render();
+    });
+
+    el('exportBtn').addEventListener('click', () => {
+      const days = loadDays(storageKey);
+      const data = JSON.stringify([...days].sort(), null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}-backup-${todayKey()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showMsg('Backup saved');
+    });
+
+    el('importBtn').addEventListener('click', () => el('importFile').click());
+
+    el('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!Array.isArray(imported)) throw new Error();
+          const existing = loadDays(storageKey);
+          imported.forEach(d => existing.add(d));
+          saveDays(storageKey, existing);
+          render();
+          showMsg(`Imported ${imported.length} days`);
+        } catch { showMsg('Invalid backup file'); }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    function showMsg(text) {
+      const e = el('backupMsg');
+      e.textContent = text;
+      setTimeout(() => e.textContent = '', 3000);
+    }
+
+    render();
   }
 
-  render();
+  createTracker('yoga', 'yoga_days');
+  createTracker('bike', 'bike_days');
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
